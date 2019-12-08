@@ -3,6 +3,7 @@ package com.example.notebook;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -34,7 +35,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        updateNotes(Util.getNotes(file));
+       // updateNotes(Util.getNotes(file));
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==Util.REQUEST_CODE_UPDATE&& resultCode==RESULT_OK){
+            System.out.println("updating");
+            int id=data.getIntExtra("id",0);
+           Note updateNote=new Note(data.getStringExtra("theme")
+                   ,Util.getDate()
+                   ,data.getStringExtra("note"));
+            notes.set(id,updateNote);
+
+            adapter.notifyItemChanged(id);
+        }
+
     }
 
     @Override
@@ -117,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.add_note:
                 Intent intent = new Intent(this, NoteActivity.class);
+                intent.putExtra("action","add");
                 startActivity(intent);
                 return true;
             case R.id.sort_by_theme:

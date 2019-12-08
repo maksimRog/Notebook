@@ -1,5 +1,6 @@
 package com.example.notebook;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,6 +22,8 @@ import java.time.LocalDate;
 import java.util.Date;
 import java.util.Locale;
 
+import javax.xml.transform.Result;
+
 public class NoteActivity extends AppCompatActivity {
 
     @Override
@@ -30,36 +33,64 @@ public class NoteActivity extends AppCompatActivity {
         Button ok = findViewById(R.id.ok_button);
         final EditText theme = findViewById(R.id.theme);
         final EditText note = findViewById(R.id.note);
+        final Intent intent=getIntent();
+        String action= intent.getStringExtra("action");
+        switch (action){
+            case "update":
+                this.setTitle("Update note");
+                theme.setText(intent.getStringExtra("theme"));
+                note.setText(intent.getStringExtra("note"));
+                ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent data=new Intent();
+                        data.putExtra("theme",theme.getText().toString());
+                        data.putExtra("note",note.getText().toString());
+                        data.putExtra("id",intent.getIntExtra("id",-1));
+                        setResult(RESULT_OK,data);
+                        Toast.makeText(v.getContext(),"Note updated",Toast.LENGTH_SHORT).show();
+                        finish();
 
-        String path = this.getFilesDir().getAbsolutePath();
-        final File file = new File(path + "/data.txt");
-        System.out.println(file);
+                    }
+                });
+                break;
+            case "add":
+                this.setTitle("Add note");
+                String path = this.getFilesDir().getAbsolutePath();
+                final File file = new File(path + "/data.txt");
+                System.out.println(file);
 
-        ok.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
+                ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        try {
 
 
-                    FileWriter fr = new FileWriter(file, true);
-                    String line = "";
-                    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss",
-                            Locale.getDefault());
-                    line = Util.createLine(theme.getText().toString().trim(), formatter.format(new Date()),
-                            note.getText().toString().replaceAll("\n", " ").trim());
+                            FileWriter fr = new FileWriter(file, true);
+                            String line = "";
 
-                    fr.write(line + "\n");
-                    fr.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                theme.getText().clear();
-                note.getText().clear();
-                Toast.makeText(getApplicationContext(), "Note added", Toast.LENGTH_SHORT).show();
+                            line = Util.createLine(theme.getText().toString().trim(), Util.getDate(),
+                                    note.getText().toString().replaceAll("\n", " ").trim());
 
-            }
-        });
+                            fr.write(line + "\n");
+                            fr.close();
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        theme.getText().clear();
+                        note.getText().clear();
+                        Toast.makeText(getApplicationContext(), "Note added", Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+                break;
+        }
+
+
+
+
+
     }
 }
