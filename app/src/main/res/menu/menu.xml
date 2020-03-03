@@ -4,25 +4,19 @@
     <item
         android:id="@+id/find_note"
         android:icon="@drawable/ic_search_black_24dp"
-        android:title="find notes"
-        app:actionViewClass="android.support.v7.widget.SearchView"
+        android:title=""
+
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView" />
     <item
         android:title="menu"
         app:showAsAction="always">
         <menu>
             <item
-                android:id="@+id/show_all"
-                android:icon="@drawable/ic_menu_black_24dp"
-                android:title="show all notes" />
-            <item
                 android:id="@+id/add_note"
                 android:icon="@drawable/ic_add_black_24dp"
                 android:title="add note" />
-            <item
-                android:id="@+id/save_changes"
-                android:icon="@drawable/ic_save_black_24dp"
-                android:title="save changes" />
+
             <item
                 android:icon="@drawable/ic_sort_black_24dp"
                 android:title="sort"

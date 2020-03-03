@@ -1,31 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_layout"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="6dp">
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
 
-    <EditText
+        android:layout_width="match_parent"
+        android:hint="Theme"
+        android:layout_height="wrap_content">
+        <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/theme"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Theme" />
+      />
+    </com.google.android.material.textfield.TextInputLayout>
 
-    <EditText
-        android:id="@+id/note"
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/theme"
         android:hint="Note"
-        android:lines="5" />
+        android:layout_height="wrap_content">
 
-    <Button
+        <com.google.android.material.textfield.TextInputEditText
+
+            android:id="@+id/note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lines="5" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/ok_button"
-        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_gravity="end"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/note"
-        android:layout_alignParentRight="true"
-        android:text="ok" />
-</RelativeLayout>
+
+        android:text="save" />
+</LinearLayout>
