@@ -21,11 +21,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class NoteBookAdapter extends RecyclerView.Adapter<NoteBookAdapter.MViewHolder> {
     private List<Note> notes;
-    private LayoutInflater inflater;
+    private List<Note> allNotes = new ArrayList<>();
     private Context context;
-    private Handler handler = new Handler(Looper.getMainLooper());
 
     public class MViewHolder extends RecyclerView.ViewHolder {
         public TextView tv_theme, tv_date, tv_note;
@@ -54,30 +55,21 @@ public class NoteBookAdapter extends RecyclerView.Adapter<NoteBookAdapter.MViewH
         }
     }
 
-    public void updateNotesFromDB() {
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                notes = NoteApp.getInstance().getDatabase().noteDao().getAll();
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        notifyDataSetChanged();
-                    }
-                });
-            }
-        }).start();
-    }
 
     public void updateNotes(List<Note> newNotes) {
         notes = newNotes;
-        System.out.println("adapter:" + notes + "\n" + newNotes);
+        String query = context.getSharedPreferences(MainActivity.APP_PREF, MODE_PRIVATE)
+                .getString("query", null);
+        if (query != null && !query.equals("")) {
+            allNotes.clear();
+            allNotes.addAll(notes);
+            notes = searchNotesWithKeyword(query);
+        }
         notifyDataSetChanged();
     }
 
-    public void updateNote( int position,Note note) {
-        notes.set(position,note);
+    public void updateNote(int position, Note note) {
+        notes.set(position, note);
         notifyItemChanged(position);
     }
 
@@ -92,57 +84,35 @@ public class NoteBookAdapter extends RecyclerView.Adapter<NoteBookAdapter.MViewH
     }
 
     public void deleteAll() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                NoteApp.getInstance().getDatabase().noteDao().deleteAll();
-                notes.clear();
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        notifyDataSetChanged();
-
-                    }
-                });
-            }
-        }).start();
-
+        notes.clear();
+        notifyDataSetChanged();
     }
 
-    public void searchNotesWithKeyword(String keyword) {
-        System.out.println("asfasfasfasf");
+    public List<Note> searchNotesWithKeyword(String keyword) {
+        if (keyword == null || keyword.equals("")) {
+            return allNotes;
+        }
         List<Note> buffer = new ArrayList<>();
-        for (Note note : notes) {
-
+        for (Note note : allNotes) {
             if (note.note.toLowerCase().contains(keyword.toLowerCase())) {
                 buffer.add(note);
             }
         }
-        updateNotes(buffer);
+        return buffer;
     }
 
     public void deleteNote(final int position) {
+        notes.remove(position);
+        notifyItemRemoved(position);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println(notes.get(position).note);
-                NoteApp.getInstance().getDatabase().noteDao().delete(notes.get(position));
-                notes.remove(position);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        notifyItemRemoved(position);
+    }
 
-                    }
-                });
-            }
-        }).start();
+    public Note getByPosition(int position) {
+        return notes.get(position);
     }
 
     public NoteBookAdapter(Context context) {
         this.context = context;
-        this.inflater = LayoutInflater.from(context);
     }
 
 
@@ -150,7 +120,7 @@ public class NoteBookAdapter extends RecyclerView.Adapter<NoteBookAdapter.MViewH
     public NoteBookAdapter.MViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
 
 
-        View view = inflater.inflate(R.layout.item, viewGroup, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item, viewGroup, false);
         return new MViewHolder(view);
     }
 

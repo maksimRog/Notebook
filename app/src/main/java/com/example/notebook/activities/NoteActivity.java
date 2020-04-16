@@ -11,10 +11,6 @@ import com.example.notebook.NoteApp;
 import com.example.notebook.database.Note;
 import com.example.notebook.databinding.NoteActivityBinding;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 public class NoteActivity extends AppCompatActivity {
     private NoteActivityBinding binding;
 
@@ -55,7 +51,7 @@ public class NoteActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         final Note note=new Note();
-                        note.date = setCreationDate();
+                        note.setCreationDate();
                         note.note = binding.note.getText().toString().trim();
                         note.theme = binding.theme.getText().toString().trim();
                         new Thread(new Runnable() {
@@ -76,9 +72,5 @@ public class NoteActivity extends AppCompatActivity {
 
     }
 
-    public String setCreationDate() {
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss",
-                Locale.getDefault());
-        return formatter.format(new Date());
-    }
+
 }

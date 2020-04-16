@@ -18,36 +18,20 @@ import com.example.notebook.NoteBookAdapter;
 import com.example.notebook.R;
 import com.example.notebook.database.Note;
 
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+
+public class MainActivity extends AppCompatActivity implements MainActivityView {
     private NoteBookAdapter adapter;
-    private String queryWord;
+    public static final String APP_PREF = "main pref";
+    MainActivityPresenter presenter;
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        adapter.updateNotesFromDB();
+    protected void onStart() {
+        super.onStart();
+        presenter.updateNotesFromDB();
+
     }
-
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString("saveWord", queryWord);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null) {
-            queryWord = savedInstanceState.getString("saveWord");
-            if (queryWord != null) {
-                adapter.searchNotesWithKeyword(queryWord);
-            }
-
-        }
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -56,31 +40,33 @@ public class MainActivity extends AppCompatActivity {
 
         final MenuItem searchItem = menu.findItem(R.id.find_note);
         final SearchView searchView = (SearchView) searchItem.getActionView();
-
+        String queryWord = getSharedPreferences(APP_PREF, MODE_PRIVATE).getString("query", null);
         if (queryWord != null) {
             searchItem.expandActionView();
             searchView.setQuery(queryWord, false);
-            adapter.searchNotesWithKeyword(queryWord);
         }
+        searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                return true;
+            }
 
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                getSharedPreferences(APP_PREF, MODE_PRIVATE).edit().putString("query", null).apply();
+                return true;
+            }
+        });
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-
-
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (newText.equals("")) {
-                    queryWord = null;
-                    adapter.updateNotesFromDB();
-                } else {
-                    queryWord = newText;
-                    adapter.searchNotesWithKeyword(newText);
-
-                }
+                adapter.updateNotes(adapter.searchNotesWithKeyword(newText));
+                getSharedPreferences(APP_PREF, MODE_PRIVATE).edit().putString("query", newText).apply();
                 return false;
             }
         });
@@ -107,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.delete_all:
-                adapter.deleteAll();
+                presenter.deleteAll();
                 return true;
 
 
@@ -120,26 +106,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == 100) {
-            final int id = data.getIntExtra("id_note", -1);
-            final int position = data.getIntExtra("position", -1);
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    final Note note = NoteApp.getInstance().getDatabase()
-                            .noteDao().getById(id);
-                    note.theme = data.getStringExtra("theme");
-                    note.note = data.getStringExtra("note");
-                    NoteApp.getInstance().getDatabase()
-                            .noteDao().update(note);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            adapter.updateNote(position, note);
-                        }
-                    });
-                }
-            }).start();
+            if (data != null) {
+                presenter.updateNoteFromIntent(data);
+            }
 
         }
     }
@@ -147,12 +116,41 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initViews();
+    }
+
+
+    @Override
+    public void deleteAll() {
+        adapter.deleteAll();
+    }
+
+    @Override
+    public void deleteNote(int position) {
+        adapter.deleteNote(position);
+    }
+
+    @Override
+    public void updateNote(int position, Note note) {
+        adapter.updateNote(position, note);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        presenter=null;
+        getSharedPreferences(APP_PREF, MODE_PRIVATE).edit().putString("query","").apply();
+
+    }
+
+    @Override
+    public void initViews() {
         setContentView(R.layout.activity_main);
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
         adapter = new NoteBookAdapter(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
-
+        presenter = new MainActivityPresenter(this);
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0
                 , ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
@@ -162,14 +160,15 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
-                // NoteStorage.removeNote(MainActivity.this, notes.get(viewHolder.getAdapterPosition()));
                 final int position = viewHolder.getAdapterPosition();
-                adapter.deleteNote(position);
-
+                presenter.deleteNote(adapter.getByPosition(position), position);
             }
         }).attachToRecyclerView(recyclerView);
     }
 
-
+    @Override
+    public void updateNotes(List<Note> notes) {
+        adapter.updateNotes(notes);
+    }
 }
 
